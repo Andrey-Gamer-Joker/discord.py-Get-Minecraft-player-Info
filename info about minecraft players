@@ -1,0 +1,25 @@
+import disnake
+from disnake.ext import commands # импортируем необходимые модули
+import requests
+
+intents = disnake.Intents.default() # Ставим разрешения
+intents.message_content = True
+
+bot = commands.Bot(command_prefix='/', intents=intents) # вместо "/" вы можете любой другой символ использовать
+
+@bot.slash_command(description="Ищет игроков в майнкрафте по никнейму")
+async def minecraft_player(ctx, player_name):
+    try:
+        response = requests.get(f'https://api.mojang.com/users/profiles/minecraft/{player_name}') # сайт откуда берётся информация о игроке (кроме скина)
+        if response.status_code == 200:
+            player_data = response.json()
+            player_uuid = player_data['id']
+            player_skin_url = f'https://crafatar.com/renders/body/{player_uuid}' # информация откуда берётся скин
+            await ctx.send(f"Игрок: {player_name}\nID аккаунта: {player_uuid}")
+            await ctx.send(player_skin_url)
+        else:
+            await ctx.send('Игрок с таким никнеймом не найден.')
+    except Exception as e:
+        await ctx.send(f'Произошла ошибка: {e}') # если произойдёт техническая ошибка
+
+bot.run('BotToken') # тут пишем токен дискорд бота
